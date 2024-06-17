@@ -1,6 +1,6 @@
 # Voyage
 
-##Description
+## Description
 Voyage is a mobile app that allows users to track their goals via the completion of certain timed resolutions, providing comsetic rewards for each goal completed.
 
 ## Getting Started
