@@ -3,6 +3,7 @@
 // Generated file. Do not edit.
 //
 
+<<<<<<< Updated upstream
 // @dart = 2.13
 // ignore_for_file: type=lint
 
@@ -14,3 +15,8 @@ void registerPlugins([final Registrar? pluginRegistrar]) {
   SharedPreferencesPlugin.registerWith(registrar);
   registrar.registerMessageHandler();
 }
+=======
+// ignore_for_file: type=lint
+
+void registerPlugins() {}
+>>>>>>> Stashed changes

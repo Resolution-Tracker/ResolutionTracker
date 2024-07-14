@@ -44,6 +44,7 @@
       "languageVersion": "2.12"
     },
     {
+<<<<<<< Updated upstream
       "name": "ffi",
       "rootUri": "file:///C:/Users/lairdc/AppData/Local/Pub/Cache/hosted/pub.dev/ffi-2.1.2",
       "packageUri": "lib/",
@@ -56,6 +57,8 @@
       "languageVersion": "3.0"
     },
     {
+=======
+>>>>>>> Stashed changes
       "name": "flutter",
       "rootUri": "file:///C:/Users/lairdc/Dropbox/PC/Desktop/flutter/packages/flutter",
       "packageUri": "lib/",
@@ -74,12 +77,15 @@
       "languageVersion": "3.3"
     },
     {
+<<<<<<< Updated upstream
       "name": "flutter_web_plugins",
       "rootUri": "file:///C:/Users/lairdc/Dropbox/PC/Desktop/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.2"
     },
     {
+=======
+>>>>>>> Stashed changes
       "name": "leak_tracker",
       "rootUri": "file:///C:/Users/lairdc/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-10.0.4",
       "packageUri": "lib/",
@@ -128,6 +134,7 @@
       "languageVersion": "3.0"
     },
     {
+<<<<<<< Updated upstream
       "name": "path_provider_linux",
       "rootUri": "file:///C:/Users/lairdc/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_linux-2.2.1",
       "packageUri": "lib/",
@@ -200,6 +207,8 @@
       "languageVersion": "2.19"
     },
     {
+=======
+>>>>>>> Stashed changes
       "name": "sky_engine",
       "rootUri": "file:///C:/Users/lairdc/Dropbox/PC/Desktop/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
@@ -254,6 +263,7 @@
       "languageVersion": "3.3"
     },
     {
+<<<<<<< Updated upstream
       "name": "web",
       "rootUri": "file:///C:/Users/lairdc/AppData/Local/Pub/Cache/hosted/pub.dev/web-0.5.1",
       "packageUri": "lib/",
@@ -266,13 +276,19 @@
       "languageVersion": "3.0"
     },
     {
+=======
+>>>>>>> Stashed changes
       "name": "voyage",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     }
   ],
+<<<<<<< Updated upstream
   "generated": "2024-07-12T15:47:16.377840Z",
+=======
+  "generated": "2024-06-30T21:10:51.800305Z",
+>>>>>>> Stashed changes
   "generator": "pub",
   "generatorVersion": "3.4.3",
   "flutterRoot": "file:///C:/Users/lairdc/Dropbox/PC/Desktop/flutter",
