@@ -28,18 +28,16 @@ class _DetailsPageState extends State<DetailsPage> {
   void loadItem() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? itemsJson = prefs.getString('items');
-    if (itemsJson != null) {
-      List<dynamic> itemsList = jsonDecode(itemsJson);
-      List<TimerItem> items =
-          itemsList.map((item) => TimerItem.fromMap(item)).toList();
-      int index = items.indexWhere((i) => i.title == item.title);
-      if (index != -1) {
-        setState(() {
-          widget.item.streak = items[index].streak;
-        });
-      }
+    List<dynamic> itemsList = jsonDecode(itemsJson);
+    List<TimerItem> items =
+        itemsList.map((item) => TimerItem.fromMap(item)).toList();
+    int index = items.indexWhere((i) => i.title == item.title);
+    if (index != -1) {
+      setState(() {
+        widget.item.streak = items[index].streak;
+      });
     }
-  }
+    }
 
   void startTimer() {
     setState(() {
@@ -74,11 +72,9 @@ class _DetailsPageState extends State<DetailsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? itemsJson = prefs.getString('items');
     List<TimerItem> items = [];
-    if (itemsJson != null) {
-      List<dynamic> itemsList = jsonDecode(itemsJson);
-      items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
-    }
-    int index = items.indexWhere((i) => i.title == item.title);
+    List<dynamic> itemsList = jsonDecode(itemsJson);
+    items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+      int index = items.indexWhere((i) => i.title == item.title);
     if (index != -1) {
       items[index] = item;
     } else {

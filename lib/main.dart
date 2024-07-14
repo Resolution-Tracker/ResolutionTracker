@@ -45,13 +45,11 @@ class _HomePageState extends State<HomePage> {
   void loadItems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? itemsJson = prefs.getString('items');
-    if (itemsJson != null) {
-      List<dynamic> itemsList = jsonDecode(itemsJson);
-      setState(() {
-        items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
-      });
+    List<dynamic> itemsList = jsonDecode(itemsJson);
+    setState(() {
+      items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+    });
     }
-  }
 
   void saveItems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
