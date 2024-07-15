@@ -4,19 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'timer_item.dart';
 
+
 class DetailsPage extends StatefulWidget {
   final TimerItem item;
 
+
   const DetailsPage({super.key, required this.item});
+
 
   @override
   _DetailsPageState createState() => _DetailsPageState();
 }
 
+
 class _DetailsPageState extends State<DetailsPage> {
   late Timer _timer;
   bool hasCheckedIn = false;
   TimerItem get item => widget.item;
+  List<int> streakColors = List<int>.generate(49, (index) => index == 0 ? -1 : -2);
+
 
   @override
   void initState() {
@@ -25,38 +31,39 @@ class _DetailsPageState extends State<DetailsPage> {
     startTimer();
   }
 
+
   void loadItem() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? itemsJson = prefs.getString('items');
-    List<dynamic> itemsList = jsonDecode(itemsJson);
-    List<TimerItem> items =
-        itemsList.map((item) => TimerItem.fromMap(item)).toList();
-    int index = items.indexWhere((i) => i.title == item.title);
-    if (index != -1) {
-      setState(() {
-        widget.item.streak = items[index].streak;
-      });
+    if (itemsJson != null) {
+      List<dynamic> itemsList = jsonDecode(itemsJson);
+      List<TimerItem> items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+      int index = items.indexWhere((i) => i.title == item.title);
+      if (index != -1) {
+        setState(() {
+          widget.item.streak = items[index].streak;
+        });
+      }
     }
-    }
+  }
+
 
   void startTimer() {
     setState(() {
-      // Convert item.duration (in seconds) to a Duration object
-      item.endTime = DateTime.now().add(item.duration);
-      debugPrint('Timer started with duration: ${item.duration} seconds');
+      item.endTime = DateTime.now().add(const Duration(seconds: 5));
       hasCheckedIn = false;
     });
+
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         Duration remaining = item.endTime!.difference(DateTime.now());
         if (remaining.inSeconds > 0) {
-          item.countdownTimer = remaining;
+          item.duration = remaining;
         } else {
           if (!hasCheckedIn) {
             setState(() {
-              item.streakColors = updateGridFailed(item.streakColors, item.streak);
-              debugPrint("${item.streakColors[0]}");
+              streakColors = updateGridFailed(streakColors, item.streak);
               item.streak = 0;
             });
           }
@@ -68,13 +75,16 @@ class _DetailsPageState extends State<DetailsPage> {
     });
   }
 
+
   void saveItem() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? itemsJson = prefs.getString('items');
     List<TimerItem> items = [];
-    List<dynamic> itemsList = jsonDecode(itemsJson);
-    items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
-      int index = items.indexWhere((i) => i.title == item.title);
+    if (itemsJson != null) {
+      List<dynamic> itemsList = jsonDecode(itemsJson);
+      items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+    }
+    int index = items.indexWhere((i) => i.title == item.title);
     if (index != -1) {
       items[index] = item;
     } else {
@@ -84,13 +94,13 @@ class _DetailsPageState extends State<DetailsPage> {
         'items', jsonEncode(items.map((item) => item.toMap()).toList()));
   }
 
+
   void checkIn() {
     if (!hasCheckedIn) {
       setState(() {
         hasCheckedIn = true;
         item.streak += 1;
-        item.streakColors = updateGridCheckIn(item.streakColors);
-        debugPrint("${item.streakColors[0]}");
+        streakColors = updateGridCheckIn(streakColors);
       });
       saveItem();
     } else {
@@ -100,11 +110,13 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
+
 
   MaterialColor pickColor(int c) {
     if (c == -1) {
@@ -122,6 +134,7 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+
   List<int> updateGridCheckIn(List<int> streakColors) {
     if (streakColors.indexOf(-1) != 48) {
       streakColors.removeAt(48);
@@ -130,8 +143,10 @@ class _DetailsPageState extends State<DetailsPage> {
     }
     streakColors.insert(streakColors.indexOf(-1), 0);
 
+
     return streakColors;
   }
+
 
   List<int> updateGridFailed(List<int> streakColors, int streak) {
     if (streak > 0) {
@@ -142,6 +157,7 @@ class _DetailsPageState extends State<DetailsPage> {
       }
     }
 
+
     if (streakColors.indexOf(-1) != 48) {
       streakColors.removeAt(48);
     } else {
@@ -149,15 +165,18 @@ class _DetailsPageState extends State<DetailsPage> {
     }
     streakColors.insert(streakColors.indexOf(-1), -3);
 
+
     return streakColors;
   }
+
 
   @override
   Widget build(BuildContext context) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(item.countdownTimer.inHours);
-    final minutes = twoDigits(item.countdownTimer.inMinutes.remainder(60));
-    final seconds = twoDigits(item.countdownTimer.inSeconds.remainder(60));
+    final hours = twoDigits(item.duration.inHours);
+    final minutes = twoDigits(item.duration.inMinutes.remainder(60));
+    final seconds = twoDigits(item.duration.inSeconds.remainder(60));
+
 
     return Scaffold(
       appBar: AppBar(
@@ -187,16 +206,15 @@ class _DetailsPageState extends State<DetailsPage> {
                   crossAxisSpacing: 10, // Horizontal spacing
                   mainAxisSpacing: 10, // Vertical spacing
                 ),
-                itemCount: item.streakColors.length,
+                itemCount: streakColors.length,
                 itemBuilder: (context, index) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: pickColor(item.streakColors[index])[200],
-                      borderRadius:
-                          BorderRadius.circular(10), // Rounded corners
+                      color: pickColor(streakColors[index])[200],
+                      borderRadius: BorderRadius.circular(10), // Rounded corners
                       border: Border.all(
                         width: 2,
-                        color: pickColor(item.streakColors[index]),
+                        color: pickColor(streakColors[index]),
                       ),
                     ),
                   );
