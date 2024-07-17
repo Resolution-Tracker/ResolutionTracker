@@ -4,15 +4,12 @@ import 'timer_item.dart'; // Import the TimerItem model
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-
 void main() {
   runApp(const MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -22,19 +19,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-
 class _HomePageState extends State<HomePage> {
   List<TimerItem> items = [];
-
 
   @override
   void initState() {
@@ -42,6 +35,12 @@ class _HomePageState extends State<HomePage> {
     loadItems();
   }
 
+  void addItem(String title, Duration duration) {
+    setState(() {
+      items.add(TimerItem(title: title, duration: duration));
+      saveItems();
+    });
+  }
 
   void loadItems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -54,21 +53,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-
   void saveItems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String itemsJson = jsonEncode(items.map((item) => item.toMap()).toList());
     await prefs.setString('items', itemsJson);
   }
-
-
-  void addItem(String title) {
-    setState(() {
-      items.add(TimerItem(title: title));
-      saveItems();
-    });
-  }
-
 
   void removeItem(int index) {
     setState(() {
@@ -77,11 +66,10 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-
   void _showAddItemDialog() {
     TextEditingController textFieldController = TextEditingController();
     String errorText = '';
-
+    Duration selectedDuration = const Duration(hours: 24); // Default to one day
 
     showDialog(
       context: context,
@@ -96,6 +84,31 @@ class _HomePageState extends State<HomePage> {
                   TextField(
                     controller: textFieldController,
                     decoration: const InputDecoration(hintText: "Enter item"),
+                  ),
+                  DropdownButton<Duration>(
+                    value: selectedDuration,
+                    onChanged: (Duration? newValue) {
+                      setState(() {
+                        selectedDuration = newValue!;
+                      });
+                    },
+                    items: <Duration>[
+                      const Duration(seconds: 10),
+                      const Duration(hours: 1),
+                      const Duration(days: 1),
+                      const Duration(days: 7)
+                    ].map<DropdownMenuItem<Duration>>((Duration value) {
+                      return DropdownMenuItem<Duration>(
+                        value: value,
+                        child: Text(value.inHours == 1
+                            ? '1 Hour'
+                            : value.inDays == 1
+                                ? '1 Day'
+                                : value.inSeconds == 10
+                                    ? '10 Seconds'
+                                    : '1 Wekk'),
+                      );
+                    }).toList(),
                   ),
                   if (errorText.isNotEmpty)
                     Text(
@@ -120,7 +133,7 @@ class _HomePageState extends State<HomePage> {
                         errorText = 'Item cannot be blank';
                       });
                     } else {
-                      addItem(newItem);
+                      addItem(newItem, selectedDuration);
                       textFieldController.clear();
                       Navigator.of(context).pop();
                     }
@@ -133,7 +146,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

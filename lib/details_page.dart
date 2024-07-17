@@ -21,7 +21,6 @@ class _DetailsPageState extends State<DetailsPage> {
   late Timer _timer;
   bool hasCheckedIn = false;
   TimerItem get item => widget.item;
-  List<int> streakColors = List<int>.generate(49, (index) => index == 0 ? -1 : -2);
 
 
   @override
@@ -37,7 +36,8 @@ class _DetailsPageState extends State<DetailsPage> {
     String? itemsJson = prefs.getString('items');
     if (itemsJson != null) {
       List<dynamic> itemsList = jsonDecode(itemsJson);
-      List<TimerItem> items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+      List<TimerItem> items =
+          itemsList.map((item) => TimerItem.fromMap(item)).toList();
       int index = items.indexWhere((i) => i.title == item.title);
       if (index != -1) {
         setState(() {
@@ -50,7 +50,9 @@ class _DetailsPageState extends State<DetailsPage> {
 
   void startTimer() {
     setState(() {
-      item.endTime = DateTime.now().add(const Duration(seconds: 5));
+      // Convert item.duration (in seconds) to a Duration object
+      item.endTime = DateTime.now().add(item.duration);
+      debugPrint('Timer started with duration: ${item.duration} seconds');
       hasCheckedIn = false;
     });
 
@@ -59,11 +61,12 @@ class _DetailsPageState extends State<DetailsPage> {
       setState(() {
         Duration remaining = item.endTime!.difference(DateTime.now());
         if (remaining.inSeconds > 0) {
-          item.duration = remaining;
+          item.countdownTimer = remaining;
         } else {
           if (!hasCheckedIn) {
             setState(() {
-              streakColors = updateGridFailed(streakColors, item.streak);
+              item.streakColors = updateGridFailed(item.streakColors, item.streak);
+              debugPrint("${item.streakColors[0]}");
               item.streak = 0;
             });
           }
@@ -100,7 +103,8 @@ class _DetailsPageState extends State<DetailsPage> {
       setState(() {
         hasCheckedIn = true;
         item.streak += 1;
-        streakColors = updateGridCheckIn(streakColors);
+        item.streakColors = updateGridCheckIn(item.streakColors);
+        debugPrint("${item.streakColors[0]}");
       });
       saveItem();
     } else {
@@ -173,9 +177,9 @@ class _DetailsPageState extends State<DetailsPage> {
   @override
   Widget build(BuildContext context) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(item.duration.inHours);
-    final minutes = twoDigits(item.duration.inMinutes.remainder(60));
-    final seconds = twoDigits(item.duration.inSeconds.remainder(60));
+    final hours = twoDigits(item.countdownTimer.inHours);
+    final minutes = twoDigits(item.countdownTimer.inMinutes.remainder(60));
+    final seconds = twoDigits(item.countdownTimer.inSeconds.remainder(60));
 
 
     return Scaffold(
@@ -206,15 +210,16 @@ class _DetailsPageState extends State<DetailsPage> {
                   crossAxisSpacing: 10, // Horizontal spacing
                   mainAxisSpacing: 10, // Vertical spacing
                 ),
-                itemCount: streakColors.length,
+                itemCount: item.streakColors.length,
                 itemBuilder: (context, index) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: pickColor(streakColors[index])[200],
-                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                      color: pickColor(item.streakColors[index])[200],
+                      borderRadius:
+                          BorderRadius.circular(10), // Rounded corners
                       border: Border.all(
                         width: 2,
-                        color: pickColor(streakColors[index]),
+                        color: pickColor(item.streakColors[index]),
                       ),
                     ),
                   );
