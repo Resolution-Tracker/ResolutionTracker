@@ -151,7 +151,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Add to Array Example'),
+        title: const Text('Voyage'),
       ),
       body: ListView.builder(
         itemCount: items.length,
