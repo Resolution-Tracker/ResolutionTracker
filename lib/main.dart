@@ -152,37 +152,50 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Voyage'),
+        centerTitle: true,
+        titleTextStyle: TextStyle(color: Colors.purple[200],
+        fontSize: 40.0,
+        fontWeight: FontWeight.bold,),
       ),
       body: ListView.builder(
+        padding: const EdgeInsets.all(5),
         itemCount: items.length,
         itemBuilder: (context, index) {
-          return Dismissible(
-            key: Key(items[index].title),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) {
-              removeItem(index);
-            },
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
-              ),
-            ),
-            child: ListTile(
-              title: Text(items[index].title),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsPage(item: items[index]),
-                  ),
-                ).then((_) {
-                  saveItems();
-                });
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+                vertical: 2.0), // Add vertical padding here
+            child: Dismissible(
+              key: Key(items[index].title),
+              direction: DismissDirection.endToStart,
+              onDismissed: (direction) {
+                removeItem(index);
               },
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerRight,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                child: const Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                ),
+              ),
+              child: ListTile(
+                title: Text(items[index].title),
+                tileColor: index % 2 == 0
+                    ? Colors.blue[50]
+                    : Colors.green[50], // Change this to any color you want
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailsPage(item: items[index]),
+                    ),
+                  ).then((_) {
+                    saveItems();
+                  });
+                },
+              ),
             ),
           );
         },

@@ -4,32 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'timer_item.dart';
 
-
 class DetailsPage extends StatefulWidget {
   final TimerItem item;
 
-
   const DetailsPage({super.key, required this.item});
-
 
   @override
   _DetailsPageState createState() => _DetailsPageState();
 }
-
 
 class _DetailsPageState extends State<DetailsPage> {
   late Timer _timer;
   bool hasCheckedIn = false;
   TimerItem get item => widget.item;
 
-
   @override
   void initState() {
     super.initState();
     loadItem();
-    startTimer();
   }
-
 
   void loadItem() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -42,20 +35,26 @@ class _DetailsPageState extends State<DetailsPage> {
       if (index != -1) {
         setState(() {
           widget.item.streak = items[index].streak;
+          widget.item.endTime = items[index].endTime;
         });
+        if (widget.item.endTime != null) {
+          startTimer();
+        }
       }
     }
   }
 
-
   void startTimer() {
-    setState(() {
-      // Convert item.duration (in seconds) to a Duration object
-      item.endTime = DateTime.now().add(item.duration);
-      debugPrint('Timer started with duration: ${item.duration} seconds');
-      hasCheckedIn = false;
-    });
-
+    Duration remaining = item.endTime!.difference(DateTime.now());
+    if (remaining.inSeconds <= 0) {
+      setState(() {
+        item.streakColors = updateGridFailed(item.streakColors, item.streak);
+        item.streak = 0;
+        hasCheckedIn = false;
+        item.endTime = DateTime.now().add(item.duration);
+        remaining = item.duration;
+      });
+    }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -65,8 +64,8 @@ class _DetailsPageState extends State<DetailsPage> {
         } else {
           if (!hasCheckedIn) {
             setState(() {
-              item.streakColors = updateGridFailed(item.streakColors, item.streak);
-              debugPrint("${item.streakColors[0]}");
+              item.streakColors =
+                  updateGridFailed(item.streakColors, item.streak);
               item.streak = 0;
             });
           }
@@ -77,7 +76,6 @@ class _DetailsPageState extends State<DetailsPage> {
       });
     });
   }
-
 
   void saveItem() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -97,14 +95,12 @@ class _DetailsPageState extends State<DetailsPage> {
         'items', jsonEncode(items.map((item) => item.toMap()).toList()));
   }
 
-
   void checkIn() {
     if (!hasCheckedIn) {
       setState(() {
         hasCheckedIn = true;
         item.streak += 1;
         item.streakColors = updateGridCheckIn(item.streakColors);
-        debugPrint("${item.streakColors[0]}");
       });
       saveItem();
     } else {
@@ -114,13 +110,11 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
-
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
-
 
   MaterialColor pickColor(int c) {
     if (c == -1) {
@@ -138,7 +132,6 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
-
   List<int> updateGridCheckIn(List<int> streakColors) {
     if (streakColors.indexOf(-1) != 48) {
       streakColors.removeAt(48);
@@ -147,10 +140,8 @@ class _DetailsPageState extends State<DetailsPage> {
     }
     streakColors.insert(streakColors.indexOf(-1), 0);
 
-
     return streakColors;
   }
-
 
   List<int> updateGridFailed(List<int> streakColors, int streak) {
     if (streak > 0) {
@@ -161,7 +152,6 @@ class _DetailsPageState extends State<DetailsPage> {
       }
     }
 
-
     if (streakColors.indexOf(-1) != 48) {
       streakColors.removeAt(48);
     } else {
@@ -169,10 +159,8 @@ class _DetailsPageState extends State<DetailsPage> {
     }
     streakColors.insert(streakColors.indexOf(-1), -3);
 
-
     return streakColors;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +168,6 @@ class _DetailsPageState extends State<DetailsPage> {
     final hours = twoDigits(item.countdownTimer.inHours);
     final minutes = twoDigits(item.countdownTimer.inMinutes.remainder(60));
     final seconds = twoDigits(item.countdownTimer.inSeconds.remainder(60));
-
 
     return Scaffold(
       appBar: AppBar(
@@ -203,6 +190,12 @@ class _DetailsPageState extends State<DetailsPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            const SizedBox(height: 10),
+            Text(
+              'Time Remaining: $hours:$minutes:$seconds',
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 20),
             Expanded(
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -226,17 +219,22 @@ class _DetailsPageState extends State<DetailsPage> {
                 },
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              'Countdown Timer: $hours:$minutes:$seconds',
-              style: const TextStyle(fontSize: 24),
+            const SizedBox(height: 10),
+            Container(
+              height: 80,
+              width: 200,
+              child: ElevatedButton(
+                onPressed: checkIn,
+                child: const Text(
+                  'Check In',
+                  style: TextStyle(
+                    fontSize: 33.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: checkIn,
-              child: const Text('Check In'),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 170),
           ],
         ),
       ),
