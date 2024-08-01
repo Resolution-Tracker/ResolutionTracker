@@ -2,117 +2,149 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'timer_item.dart';
+import 'task_item.dart';
+
+/*
+This page is responsible for displaying info on an individual task
+Page layout is as follows:
+AppBar display back arrow, Title, best streak, current streak
+Main body display grid, check-in button, finish button
+need to make it more clear the difference between the two.
+
+this page also handles the timer which should change in the future.
+*/
 
 class DetailsPage extends StatefulWidget {
-  final TimerItem item;
+  final TaskItem task;
 
-  const DetailsPage({super.key, required this.item});
+  const DetailsPage({super.key, required this.task});
 
   @override
   _DetailsPageState createState() => _DetailsPageState();
 }
 
 class _DetailsPageState extends State<DetailsPage> {
-  late Timer _timer;
+  Timer? _timer;
   bool hasCheckedIn = false;
-  TimerItem get item => widget.item;
+  bool isFinished = false;
+  TaskItem get task => widget.task;
 
   @override
   void initState() {
     super.initState();
-    loadItem();
+    loadTask();
   }
 
-  void loadItem() async {
+  void loadTask() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? itemsJson = prefs.getString('items');
-    if (itemsJson != null) {
-      List<dynamic> itemsList = jsonDecode(itemsJson);
-      List<TimerItem> items =
-          itemsList.map((item) => TimerItem.fromMap(item)).toList();
-      int index = items.indexWhere((i) => i.title == item.title);
+    String? tasksJson = prefs.getString('tasks');
+    bool? finishedState = prefs.getBool('isFinished_${task.title}');
+    if (finishedState != null) {
+      isFinished = finishedState;
+    }
+    if (tasksJson != null) {
+      List<dynamic> tasksList = jsonDecode(tasksJson);
+      List<TaskItem> tasks =
+          tasksList.map((task) => TaskItem.fromMap(task)).toList();
+      int index = tasks.indexWhere((i) => i.title == task.title);
       if (index != -1) {
         setState(() {
-          widget.item.streak = items[index].streak;
-          widget.item.endTime = items[index].endTime;
+          widget.task.streak = tasks[index].streak;
+          widget.task.endTime = tasks[index].endTime;
         });
-        if (widget.item.endTime != null) {
+        if (widget.task.endTime != null && !isFinished) {
           startTimer();
+        } else if (!isFinished) {
+          setEndTimeAndStartTimer();
         }
+      } else if (!isFinished) {
+        setEndTimeAndStartTimer();
       }
+    } else if (!isFinished) {
+      setEndTimeAndStartTimer();
     }
+  }
+
+  void setEndTimeAndStartTimer() {
+    setState(() {
+      task.endTime = DateTime.now().add(task.duration);
+    });
+    startTimer();
   }
 
   void startTimer() {
-    Duration remaining = item.endTime!.difference(DateTime.now());
-    if (remaining.inSeconds <= 0) {
-      setState(() {
-        item.streakColors = updateGridFailed(item.streakColors, item.streak);
-        item.streak = 0;
-        hasCheckedIn = false;
-        item.endTime = DateTime.now().add(item.duration);
-        remaining = item.duration;
-      });
-    }
-
+    _timer?.cancel(); // Cancel any existing timer before starting a new one
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        Duration remaining = item.endTime!.difference(DateTime.now());
+        Duration remaining = task.endTime!.difference(DateTime.now());
         if (remaining.inSeconds > 0) {
-          item.countdownTimer = remaining;
+          task.countdownTimer = remaining;
         } else {
+          task.countdownTimer = Duration.zero;
           if (!hasCheckedIn) {
             setState(() {
-              item.streakColors =
-                  updateGridFailed(item.streakColors, item.streak);
-              item.streak = 0;
+              task.streakColors =
+                  updateGridFailed(task.streakColors, task.streak);
+              task.streak = 0;
             });
           }
-          saveItem();
-          startTimer(); // Restart the timer
+          saveTask();
+          setEndTimeAndStartTimer(); // Restart the timer
           hasCheckedIn = false;
         }
       });
     });
   }
 
-  void saveItem() async {
+  void saveTask() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? itemsJson = prefs.getString('items');
-    List<TimerItem> items = [];
-    if (itemsJson != null) {
-      List<dynamic> itemsList = jsonDecode(itemsJson);
-      items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+    String? tasksJson = prefs.getString('tasks');
+    List<TaskItem> tasks = [];
+    if (tasksJson != null) {
+      List<dynamic> tasksList = jsonDecode(tasksJson);
+      tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
     }
-    int index = items.indexWhere((i) => i.title == item.title);
+    int index = tasks.indexWhere((i) => i.title == task.title);
     if (index != -1) {
-      items[index] = item;
+      tasks[index] = task;
     } else {
-      items.add(item);
+      tasks.add(task);
     }
     await prefs.setString(
-        'items', jsonEncode(items.map((item) => item.toMap()).toList()));
+        'tasks', jsonEncode(tasks.map((task) => task.toMap()).toList()));
+    await prefs.setBool('isFinished_${task.title}', isFinished);
   }
 
   void checkIn() {
-    if (!hasCheckedIn) {
+    if (!hasCheckedIn && !isFinished) {
       setState(() {
         hasCheckedIn = true;
-        item.streak += 1;
-        item.streakColors = updateGridCheckIn(item.streakColors);
+        task.streak += 1;
+        if (task.bestStreak < task.streak) {
+          task.bestStreak = task.streak;
+        }
+        task.streakColors = updateGridCheckIn(task.streakColors);
       });
-      saveItem();
+      saveTask();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Already checked in for this interval')),
+        const SnackBar(content: Text('Already checked in for this interval or the timer is finished')),
       );
     }
   }
 
+  void finishTimer() {
+    _timer?.cancel();
+    setState(() {
+      isFinished = true;
+      task.countdownTimer = Duration.zero;
+    });
+    saveTask();
+  }
+
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -165,9 +197,9 @@ class _DetailsPageState extends State<DetailsPage> {
   @override
   Widget build(BuildContext context) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(item.countdownTimer.inHours);
-    final minutes = twoDigits(item.countdownTimer.inMinutes.remainder(60));
-    final seconds = twoDigits(item.countdownTimer.inSeconds.remainder(60));
+    final hours = twoDigits(task.countdownTimer.inHours);
+    final minutes = twoDigits(task.countdownTimer.inMinutes.remainder(60));
+    final seconds = twoDigits(task.countdownTimer.inSeconds.remainder(60));
 
     return Scaffold(
       appBar: AppBar(
@@ -175,8 +207,9 @@ class _DetailsPageState extends State<DetailsPage> {
         backgroundColor: Colors.grey,
         title: Row(
           children: [
-            Expanded(child: Text(item.title)),
-            Text('${item.streak} 🔥'),
+            Expanded(child: Text(task.title)),
+            Text('${task.bestStreak}🏆'),
+            Text('${task.streak} 🔥'),
           ],
         ),
         leading: IconButton(
@@ -203,16 +236,16 @@ class _DetailsPageState extends State<DetailsPage> {
                   crossAxisSpacing: 10, // Horizontal spacing
                   mainAxisSpacing: 10, // Vertical spacing
                 ),
-                itemCount: item.streakColors.length,
+                itemCount: task.streakColors.length,
                 itemBuilder: (context, index) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: pickColor(item.streakColors[index])[200],
+                      color: pickColor(task.streakColors[index])[200],
                       borderRadius:
                           BorderRadius.circular(10), // Rounded corners
                       border: Border.all(
                         width: 2,
-                        color: pickColor(item.streakColors[index]),
+                        color: pickColor(task.streakColors[index]),
                       ),
                     ),
                   );
@@ -220,11 +253,11 @@ class _DetailsPageState extends State<DetailsPage> {
               ),
             ),
             const SizedBox(height: 10),
-            Container(
+            SizedBox(
               height: 80,
               width: 200,
               child: ElevatedButton(
-                onPressed: checkIn,
+                onPressed: isFinished ? null : checkIn,
                 child: const Text(
                   'Check In',
                   style: TextStyle(
@@ -234,7 +267,22 @@ class _DetailsPageState extends State<DetailsPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 170),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 80,
+              width: 200,
+              child: ElevatedButton(
+                onPressed: finishTimer,
+                child: const Text(
+                  'Finish',
+                  style: TextStyle(
+                    fontSize: 33.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 150),
           ],
         ),
       ),

@@ -1,4 +1,11 @@
-class TimerItem {
+/*
+The core object of our app
+duration is what the user selects for the timer ex 1 day or 1 week
+streak colors is still kinda a WIP, should update in size as the task gets older or has existed for longer
+currently just always 49 units long
+*/
+
+class TaskItem {
   String title;
   Duration duration;
   DateTime? endTime;
@@ -12,25 +19,27 @@ class TimerItem {
   -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
   -2, -2, -2, -2, -2, -2, -2, -2, -2, -2,
   -2, -2, -2, -2, -2, -2, -2, -2, -2, ];
+  int bestStreak;
 
 
 
 
-  TimerItem({
+  TaskItem({
     required this.title,
     this.duration = const Duration(hours: 24),
     this.countdownTimer = const Duration(hours: 24),
     this.endTime,
     this.lastResetDate,
     this.streak = 0,
+    this.bestStreak = 0,
     Set<DateTime>? resetDates,
   }) : resetDates = resetDates ?? {};
 
 
 
-
-  factory TimerItem.fromMap(Map<String, dynamic> map) {
-    return TimerItem(
+//the following two function convert the tasks to and from a map to make saving to json easier
+  factory TaskItem.fromMap(Map<String, dynamic> map) {
+    return TaskItem(
       title: map['title'],
       duration: Duration(seconds: map['duration']),
       countdownTimer: Duration(seconds: map['duration']),
@@ -40,9 +49,6 @@ class TimerItem {
       resetDates: (map['resetDates'] as List).map((date) => DateTime.parse(date)).toSet(),
     );
   }
-
-
-
 
   Map<String, dynamic> toMap() {
     return {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'details_page.dart'; // Import the new page
-import 'timer_item.dart'; // Import the TimerItem model
+import 'task_page.dart'; // Import the new page
+import 'task_item.dart'; // Import the TaskItem model
+import 'view_all_tasks_page.dart'; // Import the new view all tasks page
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -9,6 +10,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  //widget to build the HomePage
   const MyApp({super.key});
 
   @override
@@ -26,47 +28,51 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
+
+//this state is responsible for the HomePage of the App
 class _HomePageState extends State<HomePage> {
-  List<TimerItem> items = [];
+  List<TaskItem> tasks = []; //this is the list of tasks displayed on the home page
+
 
   @override
   void initState() {
     super.initState();
-    loadItems();
+    loadTasks();
   }
 
-  void addItem(String title, Duration duration) {
+  void addTask(String title, Duration duration) { //function to create a new task
     setState(() {
-      items.add(TimerItem(title: title, duration: duration));
-      saveItems();
+      tasks.add(TaskItem(title: title, duration: duration));
+      saveTasks();
     });
   }
 
-  void loadItems() async {
+  void loadTasks() async { //loads all of the tasks from a json file stored locally
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? itemsJson = prefs.getString('items');
-    if (itemsJson != null) {
-      List<dynamic> itemsList = jsonDecode(itemsJson);
+    String? tasksJson = prefs.getString('tasks');
+    if (tasksJson != null) {
+      List<dynamic> tasksList = jsonDecode(tasksJson);
       setState(() {
-        items = itemsList.map((item) => TimerItem.fromMap(item)).toList();
+        tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
       });
     }
   }
 
-  void saveItems() async {
+  void saveTasks() async { //converts the list of tasks to a json file
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String itemsJson = jsonEncode(items.map((item) => item.toMap()).toList());
-    await prefs.setString('items', itemsJson);
+    String tasksJson = jsonEncode(tasks.map((task) => task.toMap()).toList());
+    await prefs.setString('tasks', tasksJson);
   }
 
-  void removeItem(int index) {
+  void removeTask(int index) { //removes task from list
     setState(() {
-      items.removeAt(index);
-      saveItems();
+      tasks.removeAt(index);
+      saveTasks();
     });
   }
 
-  void _showAddItemDialog() {
+  void _showAddTaskDialog() { //this is called when the user presses the '+' button to add a new task
+                              //it prompts the user to enter all of the pertinent info
     TextEditingController textFieldController = TextEditingController();
     String errorText = '';
     Duration selectedDuration = const Duration(hours: 24); // Default to one day
@@ -77,13 +83,13 @@ class _HomePageState extends State<HomePage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Add Item'),
+              title: const Text('Add Task'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: textFieldController,
-                    decoration: const InputDecoration(hintText: "Enter item"),
+                    decoration: const InputDecoration(hintText: "Enter Task"),
                   ),
                   DropdownButton<Duration>(
                     value: selectedDuration,
@@ -106,7 +112,7 @@ class _HomePageState extends State<HomePage> {
                                 ? '1 Day'
                                 : value.inSeconds == 10
                                     ? '10 Seconds'
-                                    : '1 Wekk'),
+                                    : '1 Week'),
                       );
                     }).toList(),
                   ),
@@ -127,13 +133,13 @@ class _HomePageState extends State<HomePage> {
                 TextButton(
                   child: const Text('Add'),
                   onPressed: () {
-                    String newItem = textFieldController.text.trim();
-                    if (newItem.isEmpty) {
+                    String newTask = textFieldController.text.trim();
+                    if (newTask.isEmpty) {
                       setState(() {
-                        errorText = 'Item cannot be blank';
+                        errorText = 'Task cannot be blank';
                       });
                     } else {
-                      addItem(newItem, selectedDuration);
+                      addTask(newTask, selectedDuration);
                       textFieldController.clear();
                       Navigator.of(context).pop();
                     }
@@ -147,8 +153,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _viewAllTasks() {
+    //when the user presses the view all tasks button, this is called which redirects them to the ViewAllTasksPage
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewAllTasksPage(tasks: tasks),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    //builds the HomePage
     return Scaffold(
       appBar: AppBar(
         title: const Text('Voyage'),
@@ -159,16 +176,16 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(5),
-        itemCount: items.length,
+        itemCount: tasks.length,
         itemBuilder: (context, index) {
           return Padding(
             padding: const EdgeInsets.symmetric(
                 vertical: 2.0), // Add vertical padding here
             child: Dismissible(
-              key: Key(items[index].title),
+              key: Key(tasks[index].title),
               direction: DismissDirection.endToStart,
               onDismissed: (direction) {
-                removeItem(index);
+                removeTask(index);
               },
               background: Container(
                 color: Colors.red,
@@ -181,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               child: ListTile(
-                title: Text(items[index].title),
+                title: Text(tasks[index].title),
                 tileColor: index % 2 == 0
                     ? Colors.blue[50]
                     : Colors.green[50], // Change this to any color you want
@@ -189,10 +206,10 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DetailsPage(item: items[index]),
+                      builder: (context) => DetailsPage(task: tasks[index]),
                     ),
                   ).then((_) {
-                    saveItems();
+                    saveTasks();
                   });
                 },
               ),
@@ -200,10 +217,21 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddItemDialog,
-        tooltip: 'Add Item',
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _viewAllTasks,
+            tooltip: 'View All Tasks',
+            child: const Icon(Icons.list),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: _showAddTaskDialog,
+            tooltip: 'Add Task',
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
