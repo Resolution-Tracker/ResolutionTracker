@@ -20,8 +20,8 @@ class _DetailsPageState extends State<DetailsPage> {
   bool isFinished = false;
   bool isFrozen = false;
   TaskItem get task => widget.task;
-  Duration frozenDuration = const Duration(seconds: 10); 
-  
+  Duration frozenDuration = const Duration(seconds: 10);
+
   @override
   void initState() {
     super.initState();
@@ -45,12 +45,13 @@ class _DetailsPageState extends State<DetailsPage> {
     String? tasksJson = prefs.getString('tasks');
     bool? finishedState = prefs.getBool('isFinished_${task.title}');
     bool? frozenState = prefs.getBool('isFrozen_${task.title}');
-    
+
     isFinished = finishedState ?? false;
     isFrozen = frozenState ?? false;
 
     List<dynamic> tasksList = jsonDecode(tasksJson ?? '[]');
-    List<TaskItem> tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
+    List<TaskItem> tasks =
+        tasksList.map((task) => TaskItem.fromMap(task)).toList();
     int index = tasks.indexWhere((i) => i.title == task.title);
     if (index != -1) {
       setState(() {
@@ -87,7 +88,8 @@ class _DetailsPageState extends State<DetailsPage> {
     setState(() {
       task.endTime = DateTime.now().add(task.duration);
       task.endTime = task.endTime?.add(const Duration(seconds: 2));
-      task.countdownTimer = task.endTime!.difference(DateTime.now()); // Immediate update
+      task.countdownTimer =
+          task.endTime!.difference(DateTime.now()); // Immediate update
     });
     startTimer();
   }
@@ -137,7 +139,8 @@ class _DetailsPageState extends State<DetailsPage> {
       tasks.add(task);
     }
 
-    await prefs.setString('tasks', jsonEncode(tasks.map((task) => task.toMap()).toList()));
+    await prefs.setString(
+        'tasks', jsonEncode(tasks.map((task) => task.toMap()).toList()));
     await prefs.setBool('isFinished_${task.title}', isFinished);
     await prefs.setBool('isFrozen_${task.title}', isFrozen);
   }
@@ -156,7 +159,8 @@ class _DetailsPageState extends State<DetailsPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Already checked in for this interval, timer is finished, or timer is frozen'),
+          content: Text(
+              'Already checked in for this interval, timer is finished, or timer is frozen'),
         ),
       );
     }
@@ -197,18 +201,22 @@ class _DetailsPageState extends State<DetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    String _twoDigitFormat(int value) {
+      return value.toString().padLeft(2, '0');
+    }
+
     String formatTime(Duration duration) {
       if (duration.inDays > 0) {
         int days = duration.inDays;
         int hours = duration.inHours % 24;
         int minutes = duration.inMinutes % 60;
         int seconds = duration.inSeconds % 60;
-        return '$days days';
+        return '$days days ${_twoDigitFormat(hours)}:${_twoDigitFormat(minutes)}:${_twoDigitFormat(seconds)}';
       } else {
         int hours = duration.inHours;
         int minutes = duration.inMinutes % 60;
         int seconds = duration.inSeconds % 60;
-        return '$hours:$minutes:$seconds';
+        return '${_twoDigitFormat(hours)}:${_twoDigitFormat(minutes)}:${_twoDigitFormat(seconds)}';
       }
     }
 
@@ -275,7 +283,8 @@ class _DetailsPageState extends State<DetailsPage> {
               children: [
                 Text(
                   '⌛ $countdownDisplay ⌛',
-                  style: const TextStyle(fontSize: 35, color: Color.fromARGB(255, 206, 147, 216)),
+                  style: const TextStyle(
+                      fontSize: 35, color: Color.fromARGB(255, 206, 147, 216)),
                 ),
                 const SizedBox(width: 5),
                 IconButton(
