@@ -52,16 +52,14 @@ class _HomePageState extends State<HomePage> {
   void loadTasks() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tasksJson = prefs.getString('tasks');
-    if (tasksJson != null) {
-      List<dynamic> tasksList = jsonDecode(tasksJson);
-      setState(() {
-        //getting the list of task back from the map
-        tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
-        //sort the tasks by A to Z since thats default option
-        _sortTasks();
-      });
+    List<dynamic> tasksList = jsonDecode(tasksJson!);
+    setState(() {
+      //getting the list of task back from the map
+      tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
+      //sort the tasks by A to Z since thats default option
+      _sortTasks();
+    });
     }
-  }
 
 //saves the task, called at various times, like removing or adding a task, turns the task into a map with toMap (in task_item.dart)
 //then converts the map to JSON
@@ -82,91 +80,90 @@ class _HomePageState extends State<HomePage> {
 //this is called when user clicks plus sign
 //prompts user for title & duration
   void _showAddTaskDialog() {
-    TextEditingController textFieldController = TextEditingController();
-    String errorText = '';
-    Duration selectedDuration = const Duration(hours: 24); //default duration
+  TextEditingController textFieldController = TextEditingController();
+  String errorText = '';
+  Duration selectedDuration = const Duration(seconds: 10); // Default duration
 
-    //displays a dialog box
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Add Task'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  //this text field prompts user for the title
-                  TextField(
-                    controller: textFieldController,
-                    decoration: const InputDecoration(hintText: "Enter Task"),
-                  ),
-                  //the dropdown asks for the desired duration
-                  DropdownButton<Duration>(
-                    value: selectedDuration,
-                    onChanged: (Duration? newValue) {
-                      setState(() {
-                        selectedDuration = newValue!;
-                      });
-                    },
-                    items: <Duration>[
-                      const Duration(seconds: 10),
-                      const Duration(hours: 1),
-                      const Duration(days: 1),
-                      const Duration(days: 7)
-                    ].map<DropdownMenuItem<Duration>>((Duration value) {
-                      return DropdownMenuItem<Duration>(
-                        value: value,
-                        child: Text(value.inHours == 1
-                            ? '1 Hour'
-                            : value.inDays == 1
-                                ? '1 Day'
-                                : value.inSeconds == 10
-                                    ? '10 Seconds'
-                                    : '1 Week'),
-                      );
-                    }).toList(),
-                  ),
-                  if (errorText.isNotEmpty)
-                    Text(
-                      errorText,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                ],
-              ),
-              //the following two widgets are just simple cancel and add buttons
-              //the cancel, stop creating a new task, add, finalizes the task creation
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Cancel'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+  // Displays a dialog box
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Add Task'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // This text field prompts user for the title
+                TextField(
+                  controller: textFieldController,
+                  decoration: const InputDecoration(hintText: "Enter Task"),
                 ),
-                TextButton(
-                  child: const Text('Add'),
-                  onPressed: () {
-                    String newTask = textFieldController.text.trim();
-                    if (newTask.isEmpty) { //error text making sure user entered a title
-                      setState(() {
-                        errorText = 'Task cannot be blank';
-                      });
-                    } else {
-                      //add a new task to tasks, and closes the popup dialog box
-                      addTask(newTask, selectedDuration);
-                      textFieldController.clear();
-                      Navigator.of(context).pop();
-                    }
+                // The dropdown asks for the desired duration
+                DropdownButton<Duration>(
+                  value: selectedDuration,
+                  onChanged: (Duration? newValue) {
+                    setState(() {
+                      selectedDuration = newValue!;
+                    });
                   },
+                  items: <Duration>[
+                    const Duration(seconds: 10),
+                    const Duration(days: 1),
+                    const Duration(days: 7),
+                    Duration(days: 30) // 1 Month
+                  ].map<DropdownMenuItem<Duration>>((Duration value) {
+                    return DropdownMenuItem<Duration>(
+                      value: value,
+                      child: Text(value.inDays == 1
+                          ? '1 Day'
+                          : value.inDays == 7
+                              ? '1 Week'
+                              : value.inDays == 30
+                                  ? '1 Month'
+                                  : '10 Seconds'),
+                    );
+                  }).toList(),
                 ),
+                if (errorText.isNotEmpty)
+                  Text(
+                    errorText,
+                    style: const TextStyle(color: Colors.red),
+                  ),
               ],
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+            // The following two widgets are just simple cancel and add buttons
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: const Text('Add'),
+                onPressed: () {
+                  String newTask = textFieldController.text.trim();
+                  if (newTask.isEmpty) { // Error text making sure user entered a title
+                    setState(() {
+                      errorText = 'Task cannot be blank';
+                    });
+                  } else {
+                    // Add a new task to tasks, and close the popup dialog box
+                    addTask(newTask, selectedDuration);
+                    textFieldController.clear();
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 
   //caled when the viewalltasks button is pressed, route the user to view all tasks page
   void _viewAllTasks() {
