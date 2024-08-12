@@ -211,7 +211,7 @@ class _DetailsPageState extends State<DetailsPage> {
         int hours = duration.inHours % 24;
         int minutes = duration.inMinutes % 60;
         int seconds = duration.inSeconds % 60;
-        return '$days days ${_twoDigitFormat(hours)}:${_twoDigitFormat(minutes)}:${_twoDigitFormat(seconds)}';
+        return '$days days';
       } else {
         int hours = duration.inHours;
         int minutes = duration.inMinutes % 60;
