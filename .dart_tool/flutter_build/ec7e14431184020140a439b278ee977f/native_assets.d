@@ -1,1 +1,0 @@
- C:\\Users\\lairdc\\Dropbox\\PC\\Documents\\GitHub\\ResolutionTracker\\.dart_tool\\flutter_build\\ec7e14431184020140a439b278ee977f\\native_assets.yaml: 
