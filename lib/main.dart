@@ -213,6 +213,8 @@ class _HomePageState extends State<HomePage> {
   ///
   /// Called when the sort button is pressed.
   void _showSortOptions() {
+    //sets _sortOption to the chosen option, then calls _sortTasks()
+    //big dialogue box w/ each option
     showDialog(
       context: context,
       builder: (context) {
@@ -291,6 +293,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //appbar which display Voyage and the button to filter and to view all tasks
       appBar: AppBar(
         title: const Text('Voyage'),
         centerTitle: true,
@@ -314,6 +317,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      //the body consists mainly of the list of tasks
+      //also the create task button at the bottom
       body: Column(
         children: [
           Expanded(
@@ -341,6 +346,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: ListTile(
                       title: Text(tasks[index].title),
+                      //alternate colors to break up the page
                       tileColor: index % 2 == 0
                           ? Colors.blue[50]
                           : Colors.purple[50],
@@ -348,6 +354,7 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
+                            //when clicked redirects to the task_page
                             builder: (context) =>
                                 DetailsPage(task: tasks[index]),
                           ),
@@ -361,6 +368,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
+          //add task button
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: SizedBox(

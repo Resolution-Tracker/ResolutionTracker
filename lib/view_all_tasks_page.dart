@@ -59,6 +59,7 @@ class _ViewAllTasksPageState extends State<ViewAllTasksPage> {
 
   @override
   Widget build(BuildContext context) {
+    //the app bar has the back arrow, title of the page and the drop down menu to pick a duration
     return Scaffold(
       appBar: AppBar(
         title: const Text('All Tasks'),
