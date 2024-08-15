@@ -1,31 +1,34 @@
 import 'package:flutter/material.dart';
 
-// A list of grey colors to be used when adding a new line of colors
+/// A list of grey colors to be used when adding a new line of colors.
 List<MaterialColor> addLine = [
   Colors.grey,
   Colors.grey,
   Colors.grey,
   Colors.grey,
   Colors.grey,
-  Colors.grey
+  Colors.grey,
 ];
 
+/// A class representing a task item with various properties such as title, score, duration, and streak.
 class TaskItem {
-  String title; // Title of the task
-  int score; // Score for the task
-  Duration duration; // Duration set for the task timer
-  DateTime? endTime; // End time of the task
-  DateTime? lastResetDate; // Last date the task was reset
-  int streak; // Current streak count
-  Set<DateTime> resetDates; // Set of dates when the task was reset
-  Duration countdownTimer; // Timer counting down for the task
-  DateTime creationDate; // Date when the task was created
-  bool hasCheckedIn; // Whether the user has checked in for the task
-  List<MaterialColor> streakColors; // Colors representing the streak
-  int bestStreak; // The best streak count achieved
-  int age; // Age of the task in days
+  String title; // The title of the task.
+  int score; // The score of the task.
+  Duration duration; // The duration set for the task timer.
+  DateTime? endTime; // The end time of the task.
+  DateTime? lastResetDate; // The last date the task was reset.
+  int streak; // The current streak count for the task.
+  Set<DateTime> resetDates; // The set of dates when the task was reset.
+  Duration countdownTimer; // The timer counting down for the task.
+  DateTime creationDate; // The date when the task was created.
+  bool hasCheckedIn; // Whether the user has checked in for the task.
+  List<MaterialColor> streakColors; // Colors representing the streak.
+  int bestStreak; // The best streak count achieved for the task.
+  int age; // The age of the task in days.
 
-  // Constructor for the TaskItem class
+  /// Constructor for the TaskItem class.
+  ///
+  /// Initializes the task with the provided values or defaults.
   TaskItem({
     required this.title,
     this.duration = const Duration(hours: 24),
@@ -39,49 +42,50 @@ class TaskItem {
     this.hasCheckedIn = false,
     Set<DateTime>? resetDates,
     DateTime? creationDate,
-    List<MaterialColor>? streakColors, // Pass streakColors here
+    List<MaterialColor>? streakColors,
   })  : resetDates = resetDates ?? {},
         creationDate = creationDate ?? DateTime.now(),
         streakColors = streakColors ?? [
-              Colors.blue,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey,
-              Colors.grey
-            ];
+          Colors.blue,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+          Colors.grey,
+        ];
 
-  // Convert the TaskItem to a map for JSON serialization
+  /// Converts the TaskItem to a map for JSON serialization.
+  ///
+  /// This method is useful for saving the task state in shared preferences or a database.
   Map<String, dynamic> toMap() {
     List<int> colorValues = streakColors.map((color) => color.value).toList();
     return {
@@ -101,13 +105,14 @@ class TaskItem {
     };
   }
 
-  // Convert a map to a TaskItem
+  /// Creates a TaskItem from a map.
+  ///
+  /// This method is useful for restoring the task state from shared preferences or a database.
   factory TaskItem.fromMap(Map<String, dynamic> map) {
     List<int> colorValues = (map['colors'] as List<dynamic>?)
         ?.map((value) => value as int)
         .toList() ?? [];
 
-    // Convert to MaterialColor
     List<MaterialColor> materialColors = colorValues
         .map((value) => _materialColorFromValue(value))
         .toList();
@@ -129,18 +134,20 @@ class TaskItem {
               .toSet()
           : {},
       creationDate: map['creationDate'] != null ? DateTime.parse(map['creationDate']) : null,
-      streakColors: materialColors
+      streakColors: materialColors,
     );
   }
 
-  // Update the streakColors list and other properties when the user checks in
+  /// Updates the `streakColors` list and other properties when the user checks in.
+  ///
+  /// This method is called when the user successfully checks in for the task, progressing the streak.
   void updateGridCheckIn() {
     int index = streakColors.indexOf(Colors.blue);
     if (index != -1) {
       streakColors[index] = Colors.purple;
       streakColors[index + 1] = Colors.blue;
 
-      // Add more grey colors if nearing the end of the current streakColors list
+      // Add more grey colors if nearing the end of the current streakColors list.
       if (streakColors.length - streakColors.indexOf(Colors.blue) == 6) {
         streakColors.addAll(addLine);
       }
@@ -151,14 +158,16 @@ class TaskItem {
     }
   }
 
-  // Update the streakColors list and other properties when the user fails to check in
+  /// Updates the `streakColors` list and other properties when the user fails to check in.
+  ///
+  /// This method is called when the user fails to check in for the task, breaking the streak.
   void updateGridFailed() {
     int index = streakColors.indexOf(Colors.blue);
     if (index != -1) {
       streakColors[index] = Colors.red;
       streakColors[index + 1] = Colors.blue;
 
-      // Add more grey colors if nearing the end of the current streakColors list
+      // Add more grey colors if nearing the end of the current streakColors list.
       if (streakColors.length - streakColors.indexOf(Colors.blue) == 6) {
         streakColors.addAll(addLine);
       }
@@ -168,12 +177,15 @@ class TaskItem {
   }
 }
 
+/// Converts an integer color value into a [MaterialColor].
+///
+/// This function maps a color value to its corresponding MaterialColor, or returns grey if not found.
 MaterialColor _materialColorFromValue(int value) {
   return <MaterialColor>[
     Colors.blue,
     Colors.red,
     Colors.grey,
     Colors.purple,
-    // Add other MaterialColors as needed
+    // Add other MaterialColors as needed.
   ].firstWhere((color) => color.value == value, orElse: () => Colors.grey);
 }

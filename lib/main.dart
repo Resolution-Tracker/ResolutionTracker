@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'task_page.dart'; // Import the new page
-import 'task_item.dart'; // Import the TaskItem model
-import 'view_all_tasks_page.dart'; // Import the new view all tasks page
+import 'task_page.dart'; // Imports the task detail page
+import 'task_item.dart'; // Imports the TaskItem model
+import 'view_all_tasks_page.dart'; // Imports the view all tasks page
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -9,6 +9,7 @@ void main() {
   runApp(const MyApp());
 }
 
+/// The main app widget.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -20,27 +21,31 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// The home page of the app where tasks are displayed.
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<TaskItem> tasks = []; //list of tasks to display
-  String _sortOption = 'A -> Z'; // default sorting option
+  /// A list of tasks displayed on the home page.
+  List<TaskItem> tasks = [];
 
-  //initial state, just loads tasks
+  /// The default sorting option.
+  String _sortOption = 'A -> Z';
+
   @override
   void initState() {
     super.initState();
     loadTasks();
   }
 
-//called when the user clicks 'done' when creating a new task
-//creates a new task and adds it to the list tasks
+  /// Adds a new task to the list and saves it.
+  ///
+  /// [title] is the name of the task.
+  /// [duration] is the duration of the task.
   void addTask(String title, Duration duration) {
     setState(() {
       tasks.add(TaskItem(title: title, duration: duration));
@@ -48,28 +53,31 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-//called when the home page is opened, loads all the tasks from a stored JSON file
+  /// Loads tasks from shared preferences and sets the state.
+  ///
+  /// This method is called during the initialization of the state.
   void loadTasks() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tasksJson = prefs.getString('tasks');
-    List<dynamic> tasksList = jsonDecode(tasksJson!);
-    setState(() {
-      //getting the list of task back from the map
-      tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
-      //sort the tasks by A to Z since thats default option
-      _sortTasks();
-    });
+    if (tasksJson != null) {
+      List<dynamic> tasksList = jsonDecode(tasksJson);
+      setState(() {
+        tasks = tasksList.map((task) => TaskItem.fromMap(task)).toList();
+        _sortTasks(); // Sort tasks after loading them
+      });
     }
+  }
 
-//saves the task, called at various times, like removing or adding a task, turns the task into a map with toMap (in task_item.dart)
-//then converts the map to JSON
+  /// Saves the current list of tasks to shared preferences.
   void saveTasks() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String tasksJson = jsonEncode(tasks.map((task) => task.toMap()).toList());
     await prefs.setString('tasks', tasksJson);
   }
 
-//removes tasks from tasks
+  /// Removes a task from the list by its index and saves the updated list.
+  ///
+  /// [index] is the position of the task to be removed.
   void removeTask(int index) {
     setState(() {
       tasks.removeAt(index);
@@ -77,95 +85,97 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-//this is called when user clicks plus sign
-//prompts user for title & duration
+  /// Displays a dialog for adding a new task.
+  ///
+  /// The dialog prompts the user for the task title and duration.
   void _showAddTaskDialog() {
-  TextEditingController textFieldController = TextEditingController();
-  String errorText = '';
-  Duration selectedDuration = const Duration(seconds: 10); // Default duration
+    TextEditingController textFieldController = TextEditingController();
+    String errorText = '';
+    Duration selectedDuration = const Duration(seconds: 10); // Default duration
 
-  // Displays a dialog box
-  showDialog(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Add Task'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // This text field prompts user for the title
-                TextField(
-                  controller: textFieldController,
-                  decoration: const InputDecoration(hintText: "Enter Task"),
-                ),
-                // The dropdown asks for the desired duration
-                DropdownButton<Duration>(
-                  value: selectedDuration,
-                  onChanged: (Duration? newValue) {
-                    setState(() {
-                      selectedDuration = newValue!;
-                    });
-                  },
-                  items: <Duration>[
-                    const Duration(seconds: 10),
-                    const Duration(days: 1),
-                    const Duration(days: 7),
-                    Duration(days: 30) // 1 Month
-                  ].map<DropdownMenuItem<Duration>>((Duration value) {
-                    return DropdownMenuItem<Duration>(
-                      value: value,
-                      child: Text(value.inDays == 1
-                          ? '1 Day'
-                          : value.inDays == 7
-                              ? '1 Week'
-                              : value.inDays == 30
-                                  ? '1 Month'
-                                  : '10 Seconds'),
-                    );
-                  }).toList(),
-                ),
-                if (errorText.isNotEmpty)
-                  Text(
-                    errorText,
-                    style: const TextStyle(color: Colors.red),
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add Task'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Text field for task title input
+                  TextField(
+                    controller: textFieldController,
+                    decoration: const InputDecoration(hintText: "Enter Task"),
                   ),
-              ],
-            ),
-            // The following two widgets are just simple cancel and add buttons
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancel'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+                  // Dropdown for selecting task duration
+                  DropdownButton<Duration>(
+                    value: selectedDuration,
+                    onChanged: (Duration? newValue) {
+                      setState(() {
+                        selectedDuration = newValue!;
+                      });
+                    },
+                    items: <Duration>[
+                      const Duration(seconds: 10),
+                      const Duration(days: 1),
+                      const Duration(days: 7),
+                      Duration(days: 30) // 1 Month
+                    ].map<DropdownMenuItem<Duration>>((Duration value) {
+                      return DropdownMenuItem<Duration>(
+                        value: value,
+                        child: Text(
+                          value.inDays == 1
+                              ? '1 Day'
+                              : value.inDays == 7
+                                  ? '1 Week'
+                                  : value.inDays == 30
+                                      ? '1 Month'
+                                      : '10 Seconds',
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  if (errorText.isNotEmpty)
+                    Text(
+                      errorText,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                ],
               ),
-              TextButton(
-                child: const Text('Add'),
-                onPressed: () {
-                  String newTask = textFieldController.text.trim();
-                  if (newTask.isEmpty) { // Error text making sure user entered a title
-                    setState(() {
-                      errorText = 'Task cannot be blank';
-                    });
-                  } else {
-                    // Add a new task to tasks, and close the popup dialog box
-                    addTask(newTask, selectedDuration);
-                    textFieldController.clear();
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
                     Navigator.of(context).pop();
-                  }
-                },
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+                  },
+                ),
+                TextButton(
+                  child: const Text('Add'),
+                  onPressed: () {
+                    String newTask = textFieldController.text.trim();
+                    if (newTask.isEmpty) {
+                      setState(() {
+                        errorText = 'Task cannot be blank';
+                      });
+                    } else {
+                      addTask(newTask, selectedDuration);
+                      textFieldController.clear();
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
-  //caled when the viewalltasks button is pressed, route the user to view all tasks page
+  /// Navigates to the view all tasks page.
+  ///
+  /// Called when the "View All Tasks" button is pressed.
   void _viewAllTasks() {
     Navigator.push(
       context,
@@ -175,7 +185,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-//sort tasks by the selected option
+  /// Sorts the tasks based on the selected sorting option.
   void _sortTasks() {
     switch (_sortOption) {
       case 'A -> Z':
@@ -199,8 +209,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  //handles the dialog box that shows up to sort the tasks
-  //when an option is selected, _sortOption is set to that and _sortTasks() is called
+  /// Displays the sorting options in a dialog.
+  ///
+  /// Called when the sort button is pressed.
   void _showSortOptions() {
     showDialog(
       context: context,
@@ -277,11 +288,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  //builds the base home page
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //the appbar displays Voyage, the sort button, and viewalltasks page button
       appBar: AppBar(
         title: const Text('Voyage'),
         centerTitle: true,
@@ -305,7 +314,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      //the list of tasks is just a simple column
       body: Column(
         children: [
           Expanded(
@@ -315,8 +323,7 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2.0),
-                  child: Dismissible( 
-                    //the dismissable allows the user to swipe to delete a task
+                  child: Dismissible(
                     key: Key(tasks[index].title),
                     direction: DismissDirection.endToStart,
                     onDismissed: (direction) {
@@ -325,15 +332,13 @@ class _HomePageState extends State<HomePage> {
                     background: Container(
                       color: Colors.red,
                       alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 5.0),
                       child: const Icon(
                         Icons.delete,
                         color: Colors.white,
                       ),
                     ),
-                    //listTile determines what each task looks like in the list
-                    //alternate between blue & purple
-                    //when a task is pushed/pressed Details page is opened and the taks are saved
                     child: ListTile(
                       title: Text(tasks[index].title),
                       tileColor: index % 2 == 0
@@ -343,7 +348,8 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DetailsPage(task: tasks[index]),
+                            builder: (context) =>
+                                DetailsPage(task: tasks[index]),
                           ),
                         ).then((_) {
                           saveTasks();
@@ -355,8 +361,6 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          //at the bottom of the screen is the create task button
-          //a simple button that on press opens the _showAddTaskDialog
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: SizedBox(
