@@ -4,23 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'task_item.dart';
 
+/// A page that displays the details of a task and allows for interaction with it.
 class DetailsPage extends StatefulWidget {
+  /// The task to be displayed on this page.
   final TaskItem task;
 
   const DetailsPage({super.key, required this.task});
 
   @override
-  // ignore: library_private_types_in_public_api
   _DetailsPageState createState() => _DetailsPageState();
 }
 
 class _DetailsPageState extends State<DetailsPage> {
   Timer? _timer; // Timer for countdown
   Timer? _resumeTimer; // Timer for resuming after freeze
-  bool isFinished = false;
-  bool isFrozen = false;
+  bool isFinished = false; // Indicates if the timer has finished
+  bool isFrozen = false; // Indicates if the timer is currently frozen
+  Duration frozenDuration = const Duration(seconds: 10); // Default freeze duration
+
+  /// Getter to access the task from the widget.
   TaskItem get task => widget.task;
-  Duration frozenDuration = const Duration(seconds: 10);
 
   @override
   void initState() {
@@ -29,6 +32,10 @@ class _DetailsPageState extends State<DetailsPage> {
     setEndTimeAndStartTimer();
   }
 
+  /// Calculates the number of missed intervals since the task's last end time.
+  ///
+  /// [task] is the task for which missed intervals are calculated.
+  /// Returns the number of missed intervals.
   int calculateMissedIntervals(TaskItem task) {
     if (task.endTime == null) {
       return 0;
@@ -40,6 +47,9 @@ class _DetailsPageState extends State<DetailsPage> {
     return elapsed.inSeconds ~/ task.duration.inSeconds;
   }
 
+  /// Loads the task data from shared preferences and updates the state.
+  ///
+  /// This includes loading the task's finished and frozen state, and handling any missed intervals.
   void loadTask() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tasksJson = prefs.getString('tasks');
@@ -84,16 +94,21 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+  /// Sets the end time for the task and starts the timer.
+  ///
+  /// This method is called whenever the timer needs to be started or restarted.
   void setEndTimeAndStartTimer() {
     setState(() {
       task.endTime = DateTime.now().add(task.duration);
       task.endTime = task.endTime?.add(const Duration(seconds: 2));
-      task.countdownTimer =
-          task.endTime!.difference(DateTime.now()); // Immediate update
+      task.countdownTimer = task.endTime!.difference(DateTime.now()); // Immediate update
     });
     startTimer();
   }
 
+  /// Starts the countdown timer for the task.
+  ///
+  /// This method ensures that the countdown is displayed and handled correctly.
   void startTimer() {
     _timer?.cancel(); // Cancel any existing timer before starting a new one
     if (isFrozen) {
@@ -126,6 +141,9 @@ class _DetailsPageState extends State<DetailsPage> {
     });
   }
 
+  /// Saves the current task state to shared preferences.
+  ///
+  /// This method is called whenever the task state changes.
   void saveTask() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tasksJson = prefs.getString('tasks');
@@ -145,6 +163,9 @@ class _DetailsPageState extends State<DetailsPage> {
     await prefs.setBool('isFrozen_${task.title}', isFrozen);
   }
 
+  /// Handles the check-in action, updating the task state if the user checks in.
+  ///
+  /// This method ensures that the streak is updated correctly and that the check-in is saved.
   void checkIn() {
     if (!task.hasCheckedIn && !isFinished && !isFrozen) {
       setState(() {
@@ -166,6 +187,9 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+  /// Finishes the current timer, setting the task as completed.
+  ///
+  /// This method is called when the user finishes the timer manually.
   void finishTimer() {
     _timer?.cancel();
     setState(() {
@@ -175,6 +199,9 @@ class _DetailsPageState extends State<DetailsPage> {
     saveTask();
   }
 
+  /// Freezes the timer, pausing it for a set duration.
+  ///
+  /// This method decreases the task's score and resumes the timer after the frozen duration.
   void freezeTimer() {
     if (task.score >= 10) {
       _timer?.cancel();
@@ -199,27 +226,32 @@ class _DetailsPageState extends State<DetailsPage> {
     }
   }
 
+  /// Formats a duration into a two-digit string representation.
+  ///
+  /// [value] is the number to format.
+  /// Returns a string representation of the value.
+  String _twoDigitFormat(int value) {
+    return value.toString().padLeft(2, '0');
+  }
+
+  /// Formats a [duration] into a human-readable string.
+  ///
+  /// If the duration is more than one day, it displays the number of days.
+  /// Otherwise, it shows the time in HH:MM:SS format.
+  String formatTime(Duration duration) {
+    if (duration.inDays > 0) {
+      int days = duration.inDays;
+      return '$days days';
+    } else {
+      int hours = duration.inHours;
+      int minutes = duration.inMinutes % 60;
+      int seconds = duration.inSeconds % 60;
+      return '${_twoDigitFormat(hours)}:${_twoDigitFormat(minutes)}:${_twoDigitFormat(seconds)}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    String _twoDigitFormat(int value) {
-      return value.toString().padLeft(2, '0');
-    }
-
-    String formatTime(Duration duration) {
-      if (duration.inDays > 0) {
-        int days = duration.inDays;
-        int hours = duration.inHours % 24;
-        int minutes = duration.inMinutes % 60;
-        int seconds = duration.inSeconds % 60;
-        return '$days days';
-      } else {
-        int hours = duration.inHours;
-        int minutes = duration.inMinutes % 60;
-        int seconds = duration.inSeconds % 60;
-        return '${_twoDigitFormat(hours)}:${_twoDigitFormat(minutes)}:${_twoDigitFormat(seconds)}';
-      }
-    }
-
     final countdownDisplay = formatTime(task.countdownTimer);
 
     bool isCheckInEnabled = !isFinished && !isFrozen && !task.hasCheckedIn;
