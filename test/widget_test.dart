@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:voyage/view_all_tasks_page.dart'; // Adjust import to your file structure
-import 'package:voyage/task_item.dart'; // Adjust import to your file structure
+import 'package:voyage/view_all_tasks_page.dart';
+import 'package:voyage/task_item.dart';
 
 void main() {
   group('TaskItem', () {
